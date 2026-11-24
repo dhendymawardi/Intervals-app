@@ -30,9 +30,6 @@ function describeChange(from, to) {
 
 /* ------------------------------------------------------------------ */
 /*  AUDIO ENGINE — V3.1 Audio Preview, Layers 1 & 2                     */
-/*  One fixed root (C4) for every scale so any two scales heard back    */
-/*  to back are genuinely comparable. Plain triangle "pluck" — the      */
-/*  note content does the teaching, not the timbre.                    */
 /* ------------------------------------------------------------------ */
 
 const ROOT_FREQ = 261.63; // C4, fixed for all 21 modes
@@ -92,7 +89,6 @@ function drone(ctx, freq, startTime, dur, peak = 0.06) {
   scheduledNodes.push(osc);
 }
 
-// events: [{ time, freqs:[..], dur, highlight:[semis..], color, target, droneFreq, droneGain }]
 function schedule(events, onActive) {
   stopAllAudio();
   const ctx = getCtx();
@@ -119,7 +115,7 @@ function scaleEvents(formula, startAt, step, color, changedSemis, target) {
     freqs: [freqFor(semi)],
     dur: step * 1.1,
     highlight: [((semi % 12) + 12) % 12],
-    color: changedSemis && changedSemis.has(((semi % 12) + 12) % 12) ? "#8C7CF0" : color,
+    color: changedSemis && changedSemis.has(((semi % 12) + 12) % 12) ? "#6D5CE7" : color,
     target,
   }));
 }
@@ -132,16 +128,16 @@ function toggleEvents(startAt, fromDegs, toDegs, reps, gap, target) {
   const droneDur = reps * gap * 2 + 0.3;
   events.push({ time: t, freqs: [], dur: droneDur, droneFreq: freqFor(-12), droneGain: 0.06, highlight: [], target });
   for (let i = 0; i < reps; i++) {
-    events.push({ time: t, freqs: fromSemis.map(freqFor), dur: gap * 0.9, highlight: fromSemis, color: "#5A5548", target });
+    events.push({ time: t, freqs: fromSemis.map(freqFor), dur: gap * 0.9, highlight: fromSemis, color: "#78716C", target });
     t += gap;
-    events.push({ time: t, freqs: toSemis.map(freqFor), dur: gap * 0.9, highlight: toSemis, color: "#8C7CF0", target });
+    events.push({ time: t, freqs: toSemis.map(freqFor), dur: gap * 0.9, highlight: toSemis, color: "#6D5CE7", target });
     t += gap;
   }
   return { events, endTime: t };
 }
 
 function playScaleFor(formula, onHighlight, changedSemis, target) {
-  const events = scaleEvents(formula, 0.05, 0.32, target === "other" ? "#8A8272" : "#4FB6A6", changedSemis || null, target || "this");
+  const events = scaleEvents(formula, 0.05, 0.32, target === "other" ? "#78716C" : "#158073", changedSemis || null, target || "this");
   schedule(events, (h, c) => onHighlight(h, c));
   return events.length * 320 + 500;
 }
@@ -149,9 +145,9 @@ function playScaleFor(formula, onHighlight, changedSemis, target) {
 function playCompareFor(otherFormula, thisFormula, changes, onHighlight) {
   const step = 0.3;
   const changedSemis = new Set(changes.map(([, to]) => semitoneOf(to)));
-  const evA = scaleEvents(otherFormula, 0.1, step, "#8A8272", null, "other");
+  const evA = scaleEvents(otherFormula, 0.1, step, "#78716C", null, "other");
   const gap1 = 0.1 + (otherFormula.length + 1) * step + 0.4;
-  const evB = scaleEvents(thisFormula, gap1, step, "#4FB6A6", changedSemis, "this");
+  const evB = scaleEvents(thisFormula, gap1, step, "#158073", changedSemis, "this");
   const gap2 = gap1 + (thisFormula.length + 1) * step + 0.5;
   const fromDegs = changes.map((c) => c[0]);
   const toDegs = changes.map((c) => c[1]);
@@ -359,7 +355,7 @@ function summarize(scaleA, scaleB, slugA, slugB) {
 }
 
 /* ------------------------------------------------------------------ */
-/*  INTERVAL RULER — now with a pulsing "active" ring for playback      */
+/*  INTERVAL RULER — Light Mode                                       */
 /* ------------------------------------------------------------------ */
 
 function IntervalRuler({ formula, size = "md", diffAgainst = null, dim = false, activeSemitones = [], activeColor = null }) {
@@ -373,20 +369,20 @@ function IntervalRuler({ formula, size = "md", diffAgainst = null, dim = false, 
   const y = H - (size === "sm" ? 14 : 22);
   const labelY = size === "sm" ? y - 12 : y - 18;
   const r = size === "sm" ? 4.5 : 6.5;
-  const active = dim ? "#5A5548" : "#4FB6A6";
-  const changed = "#8C7CF0";
+  const active = dim ? "#A8A29E" : "#0F766E";
+  const changed = "#6D5CE7";
   const pairs = [];
   for (let i = 0; i < s.length - 1; i++) pairs.push([s[i], s[i + 1]]);
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ display: "block" }}>
-      <line x1={x(0)} y1={y} x2={x(11)} y2={y} stroke="#2A2620" strokeWidth="1.5" />
+      <line x1={x(0)} y1={y} x2={x(11)} y2={y} stroke="#E2DDD5" strokeWidth="1.5" />
       {Array.from({ length: 12 }).map((_, i) => (
-        <line key={i} x1={x(i)} y1={y - 4} x2={x(i)} y2={y + 4} stroke="#2A2620" strokeWidth="1" />
+        <line key={i} x1={x(i)} y1={y - 4} x2={x(i)} y2={y + 4} stroke="#D6D0C6" strokeWidth="1" />
       ))}
       {pairs.map(([a, b], i) => {
         const gap = b - a;
-        return <line key={i} x1={x(a)} y1={y} x2={x(b)} y2={y} stroke={active} strokeWidth={size === "sm" ? 2 : 3} strokeDasharray={gap === 1 ? "3 3" : undefined} opacity={gap === 1 ? 0.6 : 1} />;
+        return <line key={i} x1={x(a)} y1={y} x2={x(b)} y2={y} stroke={active} strokeWidth={size === "sm" ? 2 : 3} strokeDasharray={gap === 1 ? "3 3" : undefined} opacity={gap === 1 ? 0.65 : 1} />;
       })}
       {s.map((n, i) => {
         const isNew = diffAgainst && !diffSemis.has(n);
@@ -394,9 +390,24 @@ function IntervalRuler({ formula, size = "md", diffAgainst = null, dim = false, 
         const isPlaying = activeSemitones.includes(n);
         return (
           <g key={i}>
-            {isPlaying && <circle cx={x(n)} cy={y} r={r + 6} fill="none" stroke={activeColor || "#4FB6A6"} strokeWidth="2" className="pulse-ring" />}
-            <circle cx={x(n)} cy={y} r={isRoot ? r + 1.5 : r} fill={isRoot ? "#F2EDE4" : isNew ? changed : active} stroke={isNew ? "#0E0D0C" : "none"} strokeWidth={isNew ? 2 : 0} />
-            <text x={x(n)} y={labelY} textAnchor="middle" fontFamily="'IBM Plex Mono', monospace" fontSize={size === "sm" ? 10 : 12} fontWeight={isRoot ? 700 : 500} fill={isNew ? changed : isRoot ? "#F2EDE4" : "#B8AF9F"}>
+            {isPlaying && <circle cx={x(n)} cy={y} r={r + 6} fill="none" stroke={activeColor || "#0F766E"} strokeWidth="2" className="pulse-ring" />}
+            <circle
+              cx={x(n)}
+              cy={y}
+              r={isRoot ? r + 1.5 : r}
+              fill={isRoot ? "#1C1917" : isNew ? changed : active}
+              stroke={isNew ? "#FFFFFF" : "none"}
+              strokeWidth={isNew ? 2 : 0}
+            />
+            <text
+              x={x(n)}
+              y={labelY}
+              textAnchor="middle"
+              fontFamily="'IBM Plex Mono', monospace"
+              fontSize={size === "sm" ? 10 : 12}
+              fontWeight={isRoot ? 700 : 500}
+              fill={isNew ? changed : isRoot ? "#1C1917" : "#57534E"}
+            >
               {formula[i]}
             </text>
           </g>
@@ -407,55 +418,59 @@ function IntervalRuler({ formula, size = "md", diffAgainst = null, dim = false, 
 }
 
 /* ------------------------------------------------------------------ */
-/*  SHARED UI                                                          */
+/*  SHARED UI — Light Mode                                             */
 /* ------------------------------------------------------------------ */
 
 function Tag({ children, tone = "teal" }) {
-  const styles = tone === "teal" ? "bg-[#122421] text-[#4FB6A6] border-[#1F4A43]" : "bg-[#211D33] text-[#8C7CF0] border-[#3A3363]";
+  const styles =
+    tone === "teal"
+      ? "bg-[#E6F4F1] text-[#0F766E] border-[#B2DFD8]"
+      : "bg-[#EFECEB] text-[#5B4BD6] border-[#D8D2F8]";
   return <span className={`inline-block px-2.5 py-1 rounded-full text-[11px] font-medium border ${styles}`}>{children}</span>;
 }
+
 function TierBadge({ tier }) {
   return tier === "core" ? (
-    <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-[#4FB6A6] bg-[#122421] border border-[#1F4A43] rounded-full px-2 py-0.5">Core</span>
+    <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-[#0F766E] bg-[#E6F4F1] border border-[#B2DFD8] rounded-full px-2 py-0.5">
+      Core
+    </span>
   ) : (
-    <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-[#8A7F72] bg-[#1A1712] border border-[#2A2620] rounded-full px-2 py-0.5">Extended</span>
+    <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-[#78716C] bg-[#F3F1EC] border border-[#E2DDD5] rounded-full px-2 py-0.5">
+      Extended
+    </span>
   );
 }
+
 function ScreenHeader({ title, onBack, eyebrow, right }) {
   return (
-    <div className="sticky top-0 z-10 bg-[#0E0D0C]/95 backdrop-blur border-b border-[#211E17] px-4 py-3.5 flex items-center gap-3">
+    <div className="sticky top-0 z-10 bg-[#FAF8F5]/95 backdrop-blur border-b border-[#E7E2D8] px-4 md:px-6 py-3.5 flex items-center gap-3">
       {onBack ? (
-        <button onClick={onBack} className="p-1 -ml-1 text-[#B8AF9F] hover:text-[#F2EDE4] active:scale-95 transition">
+        <button onClick={onBack} className="p-1.5 -ml-1 rounded-lg text-[#57534E] hover:text-[#1C1917] hover:bg-[#F0ECE3] active:scale-95 transition">
           <ChevronLeft size={22} />
         </button>
       ) : (
         <div className="w-[22px]" />
       )}
       <div className="flex-1 min-w-0">
-        {eyebrow && <p className="text-[10px] tracking-[0.14em] uppercase text-[#6B6459]">{eyebrow}</p>}
-        <h1 className="text-[18px] text-[#F2EDE4] truncate font-semibold" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>{title}</h1>
+        {eyebrow && <p className="text-[10px] tracking-[0.14em] uppercase text-[#78716C]">{eyebrow}</p>}
+        <h1 className="text-[18px] text-[#1C1917] truncate font-semibold" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+          {title}
+        </h1>
       </div>
       {right}
     </div>
   );
 }
+
 function Section({ title, children, last }) {
   return (
     <div className={last ? "mb-2" : "mb-6"}>
-      {title && <p className="text-[11px] tracking-[0.14em] uppercase text-[#6B6459] mb-2.5">{title}</p>}
+      {title && <p className="text-[11px] tracking-[0.14em] uppercase text-[#78716C] mb-2.5">{title}</p>}
       {children}
     </div>
   );
 }
 
-/* A click/keyboard-activatable card that is NOT a <button>. Used anywhere
-   the card needs to contain a real interactive <button> of its own (e.g. a
-   mini play control) — nesting <button> inside <button> is invalid HTML,
-   gets corrected by the browser's parser, and causes a hydration mismatch
-   since the corrected DOM no longer matches what React expects to attach
-   to. This preserves identical appearance and click behavior, and adds
-   proper keyboard activation (native buttons get this for free; divs
-   don't), which the plain <button> version didn't have either. */
 function ClickableCard({ onClick, className = "", children }) {
   return (
     <div
@@ -475,9 +490,6 @@ function ClickableCard({ onClick, className = "", children }) {
   );
 }
 
-/* Small pill play button — manages its own "playing" state via its own timer, */
-/* not via the global stop signal, so starting one button doesn't immediately  */
-/* flip its own indicator back off (only cuts audio from anything else). */
 function MiniPlayButton({ label, onPlay, primary }) {
   const [playing, setPlaying] = useState(false);
   const handle = (e) => {
@@ -487,13 +499,20 @@ function MiniPlayButton({ label, onPlay, primary }) {
     setTimeout(() => setPlaying(false), total);
   };
   return (
-    <button onClick={handle} disabled={playing} className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11.5px] font-medium border transition active:scale-95 disabled:opacity-60 ${primary ? "bg-[#211D33] border-[#3A3363] text-[#8C7CF0]" : "bg-[#122421] border-[#1F4A43] text-[#4FB6A6]"}`}>
+    <button
+      onClick={handle}
+      disabled={playing}
+      className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11.5px] font-medium border transition active:scale-95 disabled:opacity-60 ${
+        primary
+          ? "bg-[#EFECEB] border-[#C8C0F5] text-[#5B4BD6] hover:bg-[#E6E1FC]"
+          : "bg-[#E6F4F1] border-[#B2DFD8] text-[#0F766E] hover:bg-[#D5ECE7]"
+      }`}
+    >
       {playing ? <Pause size={12} /> : <Play size={12} />} {label}
     </button>
   );
 }
 
-/* Ruler + "Play Scale" button — Layer 1 */
 function ScaleWithPlayer({ formula }) {
   const [active, setActive] = useState({ semis: [], color: null });
   useStopReset(setActive);
@@ -506,8 +525,12 @@ function ScaleWithPlayer({ formula }) {
   return (
     <div>
       <IntervalRuler formula={formula} activeSemitones={active.semis} activeColor={active.color} />
-      <p className="text-center font-mono text-[15px] tracking-[0.25em] text-[#4FB6A6] mt-3 mb-4">{formula.join("  ")}</p>
-      <button onClick={handlePlay} disabled={playing} className="mx-auto flex items-center gap-2 bg-[#122421] border border-[#1F4A43] text-[#4FB6A6] rounded-full px-4 py-2 text-[12.5px] font-medium active:scale-95 transition disabled:opacity-60">
+      <p className="text-center font-mono text-[15px] tracking-[0.25em] text-[#0F766E] mt-3 mb-4">{formula.join("  ")}</p>
+      <button
+        onClick={handlePlay}
+        disabled={playing}
+        className="mx-auto flex items-center gap-2 bg-[#E6F4F1] border border-[#B2DFD8] text-[#0F766E] hover:bg-[#D5ECE7] rounded-full px-4 py-2 text-[12.5px] font-medium active:scale-95 transition disabled:opacity-60"
+      >
         {playing ? <Pause size={14} /> : <Play size={14} />} {playing ? "Playing…" : "Play Scale"}
       </button>
     </div>
@@ -519,16 +542,16 @@ function RelationPanel({ otherName, otherFormula, thisFormula, changes, effect }
   useStopReset(setActive);
   const changedSemis = new Set(changes.map(([, to]) => semitoneOf(to)));
   return (
-    <div className="bg-[#151209] border border-[#211E17] rounded-xl p-4">
-      <p className="text-[12px] font-mono text-[#8A8272] mb-1">{otherName}</p>
+    <div className="bg-white border border-[#E7E2D8] rounded-xl p-4 shadow-xs">
+      <p className="text-[12px] font-mono text-[#78716C] mb-1">{otherName}</p>
       <IntervalRuler formula={otherFormula} size="sm" dim activeSemitones={active.target === "other" ? active.semis : []} activeColor={active.color} />
-      <p className="text-center font-mono text-[11px] text-[#6B6459] mt-1">{otherFormula.join(" ")}</p>
+      <p className="text-center font-mono text-[11px] text-[#78716C] mt-1">{otherFormula.join(" ")}</p>
       <div className="flex items-center justify-center my-2">
-        <div className="w-px h-4 bg-[#3A362E]" />
+        <div className="w-px h-4 bg-[#D6D0C6]" />
       </div>
-      <p className="text-[12px] font-mono text-[#4FB6A6] mb-1">This scale</p>
+      <p className="text-[12px] font-mono text-[#0F766E] mb-1">This scale</p>
       <IntervalRuler formula={thisFormula} size="sm" diffAgainst={otherFormula} activeSemitones={active.target === "this" ? active.semis : []} activeColor={active.color} />
-      <p className="text-center font-mono text-[11px] text-[#6B6459] mt-1">{thisFormula.join(" ")}</p>
+      <p className="text-center font-mono text-[11px] text-[#78716C] mt-1">{thisFormula.join(" ")}</p>
 
       <div className="flex flex-wrap gap-2 mt-3.5">
         <MiniPlayButton label={otherName} onPlay={() => playScaleFor(otherFormula, (h, c) => setActive({ target: "other", semis: h, color: c }), null, "other")} />
@@ -536,13 +559,17 @@ function RelationPanel({ otherName, otherFormula, thisFormula, changes, effect }
         <MiniPlayButton primary label="Compare" onPlay={() => playCompareFor(otherFormula, thisFormula, changes, (h, c, t) => setActive({ target: t, semis: h, color: c }))} />
       </div>
 
-      <div className="mt-3 pt-3 border-t border-[#211E17] flex flex-wrap gap-1.5">
+      <div className="mt-3 pt-3 border-t border-[#ECE7DD] flex flex-wrap gap-1.5">
         {changes.map(([f, t]) => (
-          <Tag key={f + t} tone="violet">{f} → {t}</Tag>
+          <Tag key={f + t} tone="violet">
+            {f} → {t}
+          </Tag>
         ))}
       </div>
-      {effect && <p className="text-[13px] text-[#B8AF9F] leading-relaxed mt-3">{effect}</p>}
-      <p className="text-[10.5px] text-[#6B6459] mt-3">Compare plays {otherName}, then this scale, then loops just the changed note against a low root so your ear can isolate it.</p>
+      {effect && <p className="text-[13px] text-[#44403C] leading-relaxed mt-3">{effect}</p>}
+      <p className="text-[10.5px] text-[#78716C] mt-3">
+        Compare plays {otherName}, then this scale, then loops just the changed note against a low root so your ear can isolate it.
+      </p>
     </div>
   );
 }
@@ -555,80 +582,102 @@ function HomeScreen({ onOpenMode, onGoFamilies, onGoCompare, onGoChord, onGoQuiz
   const dorian = findMode("dorian");
   const other = findMode(dorian.closestRelative.other);
   return (
-    <div className="pb-6">
-      <div className="px-5 pt-8 pb-6">
-        <p className="text-[11px] tracking-[0.18em] uppercase text-[#4FB6A6] font-medium mb-2">Intervals</p>
-        <h1 className="text-[28px] leading-[1.15] text-[#F2EDE4] mb-3" style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600 }}>
+    <div className="pb-8">
+      <div className="px-5 md:px-6 pt-7 pb-5">
+        <p className="text-[11px] tracking-[0.18em] uppercase text-[#0F766E] font-semibold mb-2">Intervals</p>
+        <h1 className="text-[28px] md:text-[32px] leading-[1.15] text-[#1C1917] mb-3" style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600 }}>
           Scales don&apos;t stand alone.
           <br />
           They relate.
         </h1>
-        <p className="text-[14px] text-[#9C948A] leading-relaxed max-w-[36ch]">Every scale here is one interval change away from another. Now you can hear it, not just see it.</p>
-      </div>
-
-      <ClickableCard onClick={() => onOpenMode("dorian")} className="mx-5 mb-5 block w-[calc(100%-40px)] text-left bg-[#151209] border border-[#211E17] rounded-2xl p-5 active:scale-[0.99] transition">
-        <p className="text-[11px] tracking-[0.14em] uppercase text-[#6B6459] mb-3">One change, new sound — tap Compare and listen</p>
-        <RelationPanel otherName={other.name} otherFormula={other.formula} thisFormula={dorian.formula} changes={dorian.closestRelative.changes} effect={dorian.closestRelative.effect} />
-      </ClickableCard>
-
-      <div className="mx-5 mb-5 bg-[#122421] border border-[#1F4A43] rounded-xl p-4">
-        <p className="text-[13px] text-[#DCEFEA] leading-relaxed">
-          <span className="font-semibold">The families connect.</span> Natural Minor is a mode of Major — and the
-          parent of both minor families. Raise its 7th and you get Harmonic Minor. Raise its 6th and 7th too and you
-          get Melodic Minor. Those two are themselves only one note apart.
+        <p className="text-[14px] text-[#57534E] leading-relaxed max-w-[44ch]">
+          Every scale here is one interval change away from another. Now you can hear it, not just see it.
         </p>
       </div>
 
-      <button onClick={onGoChord} className="mx-5 mb-8 block w-[calc(100%-40px)] text-left bg-[#211D33] border border-[#3A3363] rounded-xl p-4 active:scale-[0.98] transition">
+      <ClickableCard
+        onClick={() => onOpenMode("dorian")}
+        className="mx-5 md:mx-6 mb-5 block bg-white border border-[#E7E2D8] hover:border-[#D4CEC2] rounded-2xl p-5 shadow-xs active:scale-[0.99] transition"
+      >
+        <p className="text-[11px] tracking-[0.14em] uppercase text-[#78716C] mb-3">One change, new sound — tap Compare and listen</p>
+        <RelationPanel
+          otherName={other.name}
+          otherFormula={other.formula}
+          thisFormula={dorian.formula}
+          changes={dorian.closestRelative.changes}
+          effect={dorian.closestRelative.effect}
+        />
+      </ClickableCard>
+
+      <div className="mx-5 md:mx-6 mb-5 bg-[#EBF6F3] border border-[#BEE3DC] rounded-xl p-4">
+        <p className="text-[13px] text-[#134E4A] leading-relaxed">
+          <span className="font-semibold">The families connect.</span> Natural Minor is a mode of Major — and the parent of both minor families. Raise its 7th and you get Harmonic Minor. Raise its 6th and 7th too and you get Melodic Minor. Those two are themselves only one note apart.
+        </p>
+      </div>
+
+      <button
+        onClick={onGoChord}
+        className="mx-5 md:mx-6 mb-8 block w-[calc(100%-40px)] md:w-[calc(100%-48px)] text-left bg-[#F3F0FF] hover:bg-[#EAE5FF] border border-[#D4CCF7] rounded-xl p-4 active:scale-[0.99] transition"
+      >
         <div className="flex items-center gap-2 mb-1.5">
-          <Music2 size={16} className="text-[#8C7CF0]" />
-          <p className="text-[14px] font-semibold text-[#F2EDE4]">What should I play over this chord?</p>
+          <Music2 size={16} className="text-[#5B4BD6]" />
+          <p className="text-[14px] font-semibold text-[#1C1917]">What should I play over this chord?</p>
         </div>
-        <p className="text-[12px] text-[#B4A9D9] leading-snug">Pick a chord quality, get the scales that fit it — and why.</p>
+        <p className="text-[12px] text-[#4C428A] leading-snug">Pick a chord quality, get the scales that fit it — and why.</p>
       </button>
 
-      <div className="px-5 mb-3 flex items-center justify-between">
-        <p className="text-[13px] font-semibold text-[#F2EDE4]">Scale Families</p>
-        <button onClick={onGoFamilies} className="text-[12px] text-[#4FB6A6] flex items-center gap-0.5">
+      <div className="px-5 md:px-6 mb-3 flex items-center justify-between">
+        <p className="text-[13px] font-semibold text-[#1C1917]">Scale Families</p>
+        <button onClick={onGoFamilies} className="text-[12px] font-medium text-[#0F766E] hover:underline flex items-center gap-0.5">
           Explore all <ChevronRight size={13} />
         </button>
       </div>
-      <div className="px-5 space-y-2 mb-8">
+      <div className="px-5 md:px-6 space-y-2 mb-8">
         {Object.values(FAMILIES).map((f) => {
           const core = f.modes.filter((m) => m.tier === "core").length;
           const ext = f.modes.length - core;
           return (
-            <button key={f.key} onClick={onGoFamilies} className="w-full flex items-center justify-between bg-[#151209] border border-[#211E17] rounded-xl px-4 py-3 active:scale-[0.98] transition">
-              <div>
-                <p className="text-[13.5px] font-semibold text-[#F2EDE4]">{f.name}</p>
-                <p className="text-[11px] text-[#8A7F72] mt-0.5">
+            <button
+              key={f.key}
+              onClick={onGoFamilies}
+              className="w-full flex items-center justify-between bg-white hover:bg-[#FCFBF9] border border-[#E7E2D8] rounded-xl px-4 py-3 active:scale-[0.99] transition shadow-2xs"
+            >
+              <div className="text-left">
+                <p className="text-[13.5px] font-semibold text-[#1C1917]">{f.name}</p>
+                <p className="text-[11px] text-[#78716C] mt-0.5">
                   {core} core{ext ? ` · ${ext} extended` : ""}
                 </p>
               </div>
-              <ChevronRight size={16} className="text-[#6B6459]" />
+              <ChevronRight size={16} className="text-[#78716C]" />
             </button>
           );
         })}
       </div>
 
-      <div className="px-5 grid grid-cols-2 gap-3 mb-3">
-        <button onClick={onGoCompare} className="bg-[#151209] border border-[#211E17] rounded-xl p-4 text-left active:scale-[0.97] transition">
-          <GitCompare size={18} className="text-[#4FB6A6] mb-3" />
-          <p className="text-[14px] font-semibold text-[#F2EDE4] mb-1">Compare Scales</p>
-          <p className="text-[11px] text-[#8A7F72] leading-snug">See and hear what separates two scales.</p>
+      <div className="px-5 md:px-6 grid grid-cols-2 gap-3 mb-3">
+        <button
+          onClick={onGoCompare}
+          className="bg-white hover:bg-[#FCFBF9] border border-[#E7E2D8] rounded-xl p-4 text-left active:scale-[0.98] transition shadow-2xs"
+        >
+          <GitCompare size={18} className="text-[#0F766E] mb-3" />
+          <p className="text-[14px] font-semibold text-[#1C1917] mb-1">Compare Scales</p>
+          <p className="text-[11px] text-[#78716C] leading-snug">See and hear what separates two scales.</p>
         </button>
-        <button onClick={onGoQuiz} className="bg-[#151209] border border-[#211E17] rounded-xl p-4 text-left active:scale-[0.97] transition">
-          <Brain size={18} className="text-[#8C7CF0] mb-3" />
-          <p className="text-[14px] font-semibold text-[#F2EDE4] mb-1">Interval Quiz</p>
-          <p className="text-[11px] text-[#8A7F72] leading-snug">Change one degree — name what you get.</p>
+        <button
+          onClick={onGoQuiz}
+          className="bg-white hover:bg-[#FCFBF9] border border-[#E7E2D8] rounded-xl p-4 text-left active:scale-[0.98] transition shadow-2xs"
+        >
+          <Brain size={18} className="text-[#5B4BD6] mb-3" />
+          <p className="text-[14px] font-semibold text-[#1C1917] mb-1">Interval Quiz</p>
+          <p className="text-[11px] text-[#78716C] leading-snug">Change one degree — name what you get.</p>
         </button>
       </div>
-      <div className="px-5">
-        <div className="bg-[#131110] border border-dashed border-[#211E17] rounded-xl p-4 flex items-center gap-3 opacity-60">
-          <Ear size={18} className="text-[#6B6459]" />
+      <div className="px-5 md:px-6">
+        <div className="bg-[#F4F1EA] border border-dashed border-[#D6D0C6] rounded-xl p-4 flex items-center gap-3 opacity-75">
+          <Ear size={18} className="text-[#78716C]" />
           <div>
-            <p className="text-[13px] font-semibold text-[#B8AF9F]">Ear Training</p>
-            <p className="text-[11px] text-[#6B6459]">Coming soon</p>
+            <p className="text-[13px] font-semibold text-[#44403C]">Ear Training</p>
+            <p className="text-[11px] text-[#78716C]">Coming soon</p>
           </div>
         </div>
       </div>
@@ -642,15 +691,21 @@ function HomeScreen({ onOpenMode, onGoFamilies, onGoCompare, onGoChord, onGoQuiz
 
 function FamiliesScreen({ onOpenFamily }) {
   return (
-    <div className="px-5 pt-6 pb-6 space-y-4">
+    <div className="px-5 md:px-6 pt-6 pb-8 space-y-4">
       {Object.values(FAMILIES).map((f) => {
         const core = f.modes.filter((m) => m.tier === "core").length;
         return (
-          <button key={f.key} onClick={() => onOpenFamily(f.key)} className="w-full text-left bg-[#151209] border border-[#211E17] rounded-2xl p-5 active:scale-[0.99] transition">
-            <p className="text-[16px] font-semibold text-[#F2EDE4] mb-2" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>{f.name}</p>
-            <p className="text-[12.5px] text-[#8A7F72] leading-relaxed mb-4">{f.blurb}</p>
+          <button
+            key={f.key}
+            onClick={() => onOpenFamily(f.key)}
+            className="w-full text-left bg-white hover:bg-[#FCFBF9] border border-[#E7E2D8] rounded-2xl p-5 active:scale-[0.99] transition shadow-xs"
+          >
+            <p className="text-[16px] font-semibold text-[#1C1917] mb-2" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+              {f.name}
+            </p>
+            <p className="text-[12.5px] text-[#57534E] leading-relaxed mb-4">{f.blurb}</p>
             <IntervalRuler formula={f.modes[0].formula} size="sm" />
-            <p className="text-[11px] text-[#6B6459] mt-3">
+            <p className="text-[11px] text-[#78716C] mt-3">
               {core} core · {f.modes.length - core} extended · {f.modes.length} modes total
             </p>
           </button>
@@ -662,12 +717,17 @@ function FamiliesScreen({ onOpenFamily }) {
 
 function ChainNode({ m, i, onOpenMode }) {
   return (
-    <button onClick={() => onOpenMode(m.slug)} className={`shrink-0 w-[132px] bg-[#151209] border rounded-xl p-3 text-left active:scale-95 transition ${m.tier === "extended" ? "border-[#211E17] opacity-70" : "border-[#211E17]"}`}>
+    <button
+      onClick={() => onOpenMode(m.slug)}
+      className={`shrink-0 w-[138px] bg-white hover:bg-[#FCFBF9] border rounded-xl p-3 text-left active:scale-95 transition shadow-2xs ${
+        m.tier === "extended" ? "border-[#E7E2D8] opacity-80" : "border-[#E7E2D8]"
+      }`}
+    >
       <div className="flex items-center justify-between mb-1.5">
-        <p className="text-[10px] text-[#6B6459]">Mode {i + 1}</p>
+        <p className="text-[10px] text-[#78716C]">Mode {i + 1}</p>
         <TierBadge tier={m.tier} />
       </div>
-      <p className="text-[13px] font-semibold text-[#F2EDE4] mb-2 leading-tight">{m.name}</p>
+      <p className="text-[13px] font-semibold text-[#1C1917] mb-2 leading-tight">{m.name}</p>
       <IntervalRuler formula={m.formula} size="sm" dim={m.tier === "extended"} />
     </button>
   );
@@ -676,36 +736,40 @@ function ChainNode({ m, i, onOpenMode }) {
 function FamilyDetailScreen({ familyKey, onOpenMode }) {
   const f = FAMILIES[familyKey];
   return (
-    <div className="pb-6">
-      <div className="px-5 pt-5 pb-5">
-        <p className="text-[13px] text-[#B8AF9F] leading-relaxed">{f.blurb}</p>
+    <div className="pb-8">
+      <div className="px-5 md:px-6 pt-5 pb-5">
+        <p className="text-[13px] text-[#44403C] leading-relaxed">{f.blurb}</p>
       </div>
-      <div className="px-5 mb-2">
-        <p className="text-[11px] tracking-[0.14em] uppercase text-[#6B6459] mb-3">The Chain</p>
+      <div className="px-5 md:px-6 mb-2">
+        <p className="text-[11px] tracking-[0.14em] uppercase text-[#78716C] mb-3">The Chain</p>
         <div className="flex items-stretch gap-2 overflow-x-auto no-scrollbar pb-2">
           {f.modes.map((m, i) => (
             <React.Fragment key={m.slug}>
               <ChainNode m={m} i={i} onOpenMode={onOpenMode} />
               {i < f.modes.length - 1 && (
                 <div className="flex items-center shrink-0">
-                  <ArrowRight size={14} className="text-[#3A362E]" />
+                  <ArrowRight size={14} className="text-[#A8A29E]" />
                 </div>
               )}
             </React.Fragment>
           ))}
         </div>
       </div>
-      <div className="px-5 mt-4 space-y-3">
+      <div className="px-5 md:px-6 mt-4 space-y-3">
         {f.modes.map((m) => (
-          <button key={m.slug} onClick={() => onOpenMode(m.slug)} className="w-full text-left bg-[#151209] border border-[#211E17] rounded-xl p-4 active:scale-[0.99] transition flex items-center justify-between gap-3">
+          <button
+            key={m.slug}
+            onClick={() => onOpenMode(m.slug)}
+            className="w-full text-left bg-white hover:bg-[#FCFBF9] border border-[#E7E2D8] rounded-xl p-4 active:scale-[0.99] transition flex items-center justify-between gap-3 shadow-2xs"
+          >
             <div className="min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                <p className="text-[14px] font-semibold text-[#F2EDE4]">{m.name}</p>
+                <p className="text-[14px] font-semibold text-[#1C1917]">{m.name}</p>
                 <TierBadge tier={m.tier} />
               </div>
-              <p className="text-[12px] text-[#8A7F72] truncate">{m.character.join(" · ")}</p>
+              <p className="text-[12px] text-[#78716C] truncate">{m.character.join(" · ")}</p>
             </div>
-            <ChevronRight size={16} className="text-[#6B6459] shrink-0" />
+            <ChevronRight size={16} className="text-[#78716C] shrink-0" />
           </button>
         ))}
       </div>
@@ -729,12 +793,21 @@ function CrossroadRow({ baseMode, targetSlug, changes, onOpen }) {
     setTimeout(() => setPlaying(false), total);
   };
   return (
-    <ClickableCard onClick={() => onOpen(targetSlug)} className="w-full text-left bg-[#151209] border border-[#211E17] rounded-xl p-3.5 active:scale-[0.98] transition">
+    <ClickableCard
+      onClick={() => onOpen(targetSlug)}
+      className="w-full text-left bg-white hover:bg-[#FCFBF9] border border-[#E7E2D8] rounded-xl p-3.5 active:scale-[0.99] transition shadow-2xs"
+    >
       <div className="flex items-center justify-between mb-2">
-        <p className="text-[13px] font-semibold text-[#F2EDE4]">→ {target.name}</p>
+        <p className="text-[13px] font-semibold text-[#1C1917]">→ {target.name}</p>
         <div className="flex items-center gap-2">
-          <Tag tone="violet">{changes[0][0]} → {changes[0][1]}</Tag>
-          <button onClick={handlePlay} disabled={playing} className="p-1.5 rounded-full bg-[#122421] border border-[#1F4A43] text-[#4FB6A6] disabled:opacity-60">
+          <Tag tone="violet">
+            {changes[0][0]} → {changes[0][1]}
+          </Tag>
+          <button
+            onClick={handlePlay}
+            disabled={playing}
+            className="p-1.5 rounded-full bg-[#E6F4F1] border border-[#B2DFD8] text-[#0F766E] disabled:opacity-60"
+          >
             {playing ? <Pause size={11} /> : <Play size={11} />}
           </button>
         </div>
@@ -752,20 +825,24 @@ function ModeDetailScreen({ slug, onOpenMode, onCompare }) {
   const degree = family.modes.findIndex((x) => x.slug === slug) + 1;
 
   return (
-    <div className="px-5 pt-6 pb-10">
+    <div className="px-5 md:px-6 pt-6 pb-10">
       <div className="flex items-center gap-2 mb-2">
-        <p className="text-[11px] tracking-[0.14em] uppercase text-[#6B6459]">{family.name}</p>
+        <p className="text-[11px] tracking-[0.14em] uppercase text-[#78716C]">{family.name}</p>
         <TierBadge tier={m.tier} />
       </div>
-      <h2 className="text-[24px] text-[#F2EDE4] mb-5" style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600 }}>{m.name}</h2>
+      <h2 className="text-[24px] text-[#1C1917] mb-5" style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600 }}>
+        {m.name}
+      </h2>
 
-      <div className="bg-[#151209] border border-[#211E17] rounded-2xl p-5 mb-6">
+      <div className="bg-white border border-[#E7E2D8] rounded-2xl p-5 mb-6 shadow-xs">
         <ScaleWithPlayer formula={m.formula} />
       </div>
 
       {m.crossroads ? (
         <Section title="Crossroads — One Note From Three Scales">
-          <p className="text-[13px] text-[#B8AF9F] leading-relaxed mb-3">Natural Minor sits at the center of the whole system. Change just one note and you land in a different family entirely — tap ▶ on any row to hear it happen.</p>
+          <p className="text-[13px] text-[#44403C] leading-relaxed mb-3">
+            Natural Minor sits at the center of the whole system. Change just one note and you land in a different family entirely — tap ▶ on any row to hear it happen.
+          </p>
           <div className="space-y-3">
             {m.crossroads.map((c) => (
               <CrossroadRow key={c.slug} baseMode={m} targetSlug={c.slug} changes={c.changes} onOpen={onOpenMode} />
@@ -785,25 +862,28 @@ function ModeDetailScreen({ slug, onOpenMode, onCompare }) {
       )}
 
       <Section title="Parent Scale">
-        <div className="bg-[#151209] border border-[#211E17] rounded-xl p-4">
+        <div className="bg-white border border-[#E7E2D8] rounded-xl p-4 shadow-2xs">
           {isRoot ? (
-            <p className="text-[13px] text-[#B8AF9F] leading-relaxed">
+            <p className="text-[13px] text-[#44403C] leading-relaxed">
               This is the root of the {family.name} — every other mode here is a rotation of these exact seven notes, just starting from a different degree.
             </p>
           ) : (
-            <p className="text-[13px] text-[#B8AF9F] leading-relaxed">
-              {m.name} is the <span className="text-[#F2EDE4] font-medium">{ordinal(degree)}</span> mode of{" "}
-              <span className="text-[#F2EDE4] font-medium">{family.root}</span> — same seven notes, starting {ordinal(degree)} degree in.
+            <p className="text-[13px] text-[#44403C] leading-relaxed">
+              {m.name} is the <span className="text-[#1C1917] font-semibold">{ordinal(degree)}</span> mode of{" "}
+              <span className="text-[#1C1917] font-semibold">{family.root}</span> — same seven notes, starting {ordinal(degree)} degree in.
             </p>
           )}
         </div>
       </Section>
 
       <Section title="When To Use It">
-        <p className="text-[13.5px] text-[#B8AF9F] leading-relaxed">{m.useWhen}</p>
+        <p className="text-[13.5px] text-[#44403C] leading-relaxed">{m.useWhen}</p>
       </Section>
 
-      <button onClick={() => onCompare(slug, m.closestRelative ? m.closestRelative.other : m.crossroads[0].slug)} className="w-full mb-6 flex items-center justify-center gap-2 bg-[#151209] border border-[#211E17] rounded-xl py-3 text-[13px] font-medium text-[#4FB6A6] active:scale-[0.98] transition">
+      <button
+        onClick={() => onCompare(slug, m.closestRelative ? m.closestRelative.other : m.crossroads[0].slug)}
+        className="w-full mb-6 flex items-center justify-center gap-2 bg-white hover:bg-[#FCFBF9] border border-[#E7E2D8] rounded-xl py-3 text-[13px] font-medium text-[#0F766E] active:scale-[0.99] transition shadow-2xs"
+      >
         <GitCompare size={15} /> Compare with another scale
       </button>
 
@@ -818,7 +898,9 @@ function ModeDetailScreen({ slug, onOpenMode, onCompare }) {
       <Section title="Common Chords">
         <div className="flex flex-wrap gap-1.5">
           {m.chords.map((c) => (
-            <span key={c} className="font-mono text-[13px] text-[#F2EDE4] bg-[#151209] border border-[#211E17] rounded-lg px-2.5 py-1">{c}</span>
+            <span key={c} className="font-mono text-[13px] text-[#1C1917] bg-white border border-[#E7E2D8] rounded-lg px-2.5 py-1">
+              {c}
+            </span>
           ))}
         </div>
       </Section>
@@ -826,19 +908,27 @@ function ModeDetailScreen({ slug, onOpenMode, onCompare }) {
       <Section title="Common Uses" last>
         <div className="flex flex-wrap gap-1.5">
           {m.uses.map((c) => (
-            <Tag key={c} tone="violet">{c}</Tag>
+            <Tag key={c} tone="violet">
+              {c}
+            </Tag>
           ))}
         </div>
       </Section>
 
-      <div className="mt-2">
-        <p className="text-[11px] tracking-[0.14em] uppercase text-[#6B6459] mb-3">Rest of {family.name}</p>
+      <div className="mt-4">
+        <p className="text-[11px] tracking-[0.14em] uppercase text-[#78716C] mb-3">Rest of {family.name}</p>
         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-          {family.modes.filter((x) => x.slug !== slug).map((x) => (
-            <button key={x.slug} onClick={() => onOpenMode(x.slug)} className="shrink-0 bg-[#151209] border border-[#211E17] rounded-lg px-3.5 py-2.5 text-[12.5px] text-[#B8AF9F] active:scale-95 transition">
-              {x.name}
-            </button>
-          ))}
+          {family.modes
+            .filter((x) => x.slug !== slug)
+            .map((x) => (
+              <button
+                key={x.slug}
+                onClick={() => onOpenMode(x.slug)}
+                className="shrink-0 bg-white hover:bg-[#FCFBF9] border border-[#E7E2D8] rounded-lg px-3.5 py-2.5 text-[12.5px] text-[#44403C] active:scale-95 transition shadow-2xs"
+              >
+                {x.name}
+              </button>
+            ))}
         </div>
       </div>
     </div>
@@ -860,18 +950,25 @@ function ByChordRow({ m, onOpenMode }) {
     setTimeout(() => setPlaying(false), total);
   };
   return (
-    <ClickableCard onClick={() => onOpenMode(m.slug)} className="w-full text-left bg-[#151209] border border-[#211E17] rounded-xl p-4 active:scale-[0.98] transition">
+    <ClickableCard
+      onClick={() => onOpenMode(m.slug)}
+      className="w-full text-left bg-white hover:bg-[#FCFBF9] border border-[#E7E2D8] rounded-xl p-4 active:scale-[0.99] transition shadow-2xs"
+    >
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <p className="text-[14px] font-semibold text-[#F2EDE4]">{m.name}</p>
+          <p className="text-[14px] font-semibold text-[#1C1917]">{m.name}</p>
           <TierBadge tier={m.tier} />
         </div>
-        <button onClick={handlePlay} disabled={playing} className="p-1.5 rounded-full bg-[#122421] border border-[#1F4A43] text-[#4FB6A6] disabled:opacity-60">
+        <button
+          onClick={handlePlay}
+          disabled={playing}
+          className="p-1.5 rounded-full bg-[#E6F4F1] border border-[#B2DFD8] text-[#0F766E] disabled:opacity-60"
+        >
           {playing ? <Pause size={12} /> : <Play size={12} />}
         </button>
       </div>
       <IntervalRuler formula={m.formula} size="sm" dim={m.tier === "extended"} activeSemitones={active.semis} activeColor={active.color} />
-      <p className="text-[12.5px] text-[#B8AF9F] leading-relaxed mt-2.5">{m.useWhen}</p>
+      <p className="text-[12.5px] text-[#44403C] leading-relaxed mt-2.5">{m.useWhen}</p>
     </ClickableCard>
   );
 }
@@ -883,16 +980,20 @@ function ByChordScreen({ onOpenMode }) {
 
   if (!q) {
     return (
-      <div className="px-5 pt-6 pb-6">
-        <p className="text-[13px] text-[#B8AF9F] leading-relaxed mb-5">Pick the chord you&apos;re looking at. We&apos;ll show which scales fit it, and why.</p>
+      <div className="px-5 md:px-6 pt-6 pb-8">
+        <p className="text-[13px] text-[#44403C] leading-relaxed mb-5">Pick the chord you&apos;re looking at. We&apos;ll show which scales fit it, and why.</p>
         <div className="space-y-2.5">
           {CHORD_QUALITIES.map((c) => (
-            <button key={c.key} onClick={() => setQuality(c.key)} className="w-full text-left bg-[#151209] border border-[#211E17] rounded-xl px-4 py-3.5 flex items-center justify-between active:scale-[0.98] transition">
+            <button
+              key={c.key}
+              onClick={() => setQuality(c.key)}
+              className="w-full text-left bg-white hover:bg-[#FCFBF9] border border-[#E7E2D8] rounded-xl px-4 py-3.5 flex items-center justify-between active:scale-[0.99] transition shadow-2xs"
+            >
               <div>
-                <p className="font-mono text-[15px] text-[#F2EDE4] font-semibold">{c.label}</p>
-                <p className="text-[11.5px] text-[#8A7F72] mt-0.5">{c.sub}</p>
+                <p className="font-mono text-[15px] text-[#1C1917] font-semibold">{c.label}</p>
+                <p className="text-[11.5px] text-[#78716C] mt-0.5">{c.sub}</p>
               </div>
-              <ChevronRight size={16} className="text-[#6B6459]" />
+              <ChevronRight size={16} className="text-[#78716C]" />
             </button>
           ))}
         </div>
@@ -901,17 +1002,17 @@ function ByChordScreen({ onOpenMode }) {
   }
 
   return (
-    <div className="px-5 pt-6 pb-6">
-      <button onClick={() => setQuality(null)} className="text-[12px] text-[#4FB6A6] mb-4 flex items-center gap-1">
+    <div className="px-5 md:px-6 pt-6 pb-8">
+      <button onClick={() => setQuality(null)} className="text-[12px] font-medium text-[#0F766E] mb-4 flex items-center gap-1">
         <ChevronLeft size={14} /> All chord qualities
       </button>
-      <p className="font-mono text-[20px] text-[#F2EDE4] font-semibold mb-1">{q.label}</p>
-      <p className="text-[12.5px] text-[#8A7F72] mb-5">{q.sub}</p>
+      <p className="font-mono text-[20px] text-[#1C1917] font-semibold mb-1">{q.label}</p>
+      <p className="text-[12.5px] text-[#78716C] mb-5">{q.sub}</p>
       <div className="space-y-3">
         {matches.map((m) => (
           <ByChordRow key={m.slug} m={m} onOpenMode={onOpenMode} />
         ))}
-        {matches.length === 0 && <p className="text-[13px] text-[#6B6459]">No scales tagged for this quality yet.</p>}
+        {matches.length === 0 && <p className="text-[13px] text-[#78716C]">No scales tagged for this quality yet.</p>}
       </div>
     </div>
   );
@@ -933,11 +1034,22 @@ function CompareScreen({ initialLeft, initialRight }) {
   const changes = diff.type === "substitute" ? diff.changes : null;
 
   return (
-    <div className="px-5 pt-6 pb-10">
-      <p className="text-[11px] tracking-[0.14em] uppercase text-[#6B6459] mb-3">Quick Comparisons</p>
+    <div className="px-5 md:px-6 pt-6 pb-10">
+      <p className="text-[11px] tracking-[0.14em] uppercase text-[#78716C] mb-3">Quick Comparisons</p>
       <div className="flex gap-2 overflow-x-auto no-scrollbar pb-4 mb-2">
         {QUICK_COMPARES.map((qc) => (
-          <button key={qc.label} onClick={() => { setLeft(qc.a); setRight(qc.b); }} className={`shrink-0 rounded-full px-3.5 py-2 text-[12px] border transition ${left === qc.a && right === qc.b ? "bg-[#122421] border-[#1F4A43] text-[#4FB6A6]" : "bg-[#151209] border-[#211E17] text-[#B8AF9F]"}`}>
+          <button
+            key={qc.label}
+            onClick={() => {
+              setLeft(qc.a);
+              setRight(qc.b);
+            }}
+            className={`shrink-0 rounded-full px-3.5 py-2 text-[12px] border transition ${
+              left === qc.a && right === qc.b
+                ? "bg-[#E6F4F1] border-[#B2DFD8] text-[#0F766E] font-medium"
+                : "bg-white border-[#E7E2D8] text-[#44403C] hover:bg-[#FCFBF9]"
+            }`}
+          >
             {qc.label}
           </button>
         ))}
@@ -948,16 +1060,16 @@ function CompareScreen({ initialLeft, initialRight }) {
         <PickerButton value={right} onChange={setRight} exclude={left} label="Scale B" />
       </div>
 
-      <div className="bg-[#151209] border border-[#211E17] rounded-2xl p-5 mb-5">
-        <p className="text-[12px] font-mono text-[#8A7F72] mb-2">{scaleA.name}</p>
+      <div className="bg-white border border-[#E7E2D8] rounded-2xl p-5 mb-5 shadow-xs">
+        <p className="text-[12px] font-mono text-[#78716C] mb-2">{scaleA.name}</p>
         <IntervalRuler formula={scaleA.formula} dim activeSemitones={active.target === "other" ? active.semis : []} activeColor={active.color} />
-        <p className="text-center font-mono text-[13px] text-[#8A7F72] mt-2 tracking-[0.2em]">{scaleA.formula.join("  ")}</p>
-        <div className="my-4 h-px bg-[#211E17]" />
-        <p className="text-[12px] font-mono text-[#4FB6A6] mb-2">{scaleB.name}</p>
+        <p className="text-center font-mono text-[13px] text-[#78716C] mt-2 tracking-[0.2em]">{scaleA.formula.join("  ")}</p>
+        <div className="my-4 h-px bg-[#ECE7DD]" />
+        <p className="text-[12px] font-mono text-[#0F766E] mb-2">{scaleB.name}</p>
         <IntervalRuler formula={scaleB.formula} diffAgainst={scaleA.formula} activeSemitones={active.target === "this" ? active.semis : []} activeColor={active.color} />
         <p className="text-center font-mono text-[13px] mt-2 tracking-[0.2em]">
           {scaleB.formula.map((d, i) => (
-            <span key={i} className={semis(scaleA.formula).includes(semitoneOf(d)) ? "text-[#4FB6A6]" : "text-[#8C7CF0]"}>
+            <span key={i} className={semis(scaleA.formula).includes(semitoneOf(d)) ? "text-[#0F766E]" : "text-[#5B4BD6] font-semibold"}>
               {d}
               {i < scaleB.formula.length - 1 ? "  " : ""}
             </span>
@@ -966,15 +1078,29 @@ function CompareScreen({ initialLeft, initialRight }) {
 
         <div className="flex flex-wrap gap-2 mt-4">
           <MiniPlayButton label={scaleA.name} onPlay={() => playScaleFor(scaleA.formula, (h, c) => setActive({ target: "other", semis: h, color: c }), null, "other")} />
-          <MiniPlayButton label={scaleB.name} onPlay={() => playScaleFor(scaleB.formula, (h, c) => setActive({ target: "this", semis: h, color: c }), changes ? new Set(changes.map((c) => semitoneOf(c[1]))) : null, "this")} />
+          <MiniPlayButton
+            label={scaleB.name}
+            onPlay={() =>
+              playScaleFor(
+                scaleB.formula,
+                (h, c) => setActive({ target: "this", semis: h, color: c }),
+                changes ? new Set(changes.map((c) => semitoneOf(c[1]))) : null,
+                "this"
+              )
+            }
+          />
           {changes && changes.length > 0 && (
-            <MiniPlayButton primary label="Compare" onPlay={() => playCompareFor(scaleA.formula, scaleB.formula, changes, (h, c, t) => setActive({ target: t, semis: h, color: c }))} />
+            <MiniPlayButton
+              primary
+              label="Compare"
+              onPlay={() => playCompareFor(scaleA.formula, scaleB.formula, changes, (h, c, t) => setActive({ target: t, semis: h, color: c }))}
+            />
           )}
         </div>
       </div>
 
-      <div className="bg-[#122421] border border-[#1F4A43] rounded-xl p-4">
-        <p className="text-[13px] text-[#DCEFEA] leading-relaxed">{summarize(scaleA, scaleB, left, right)}</p>
+      <div className="bg-[#EBF6F3] border border-[#BEE3DC] rounded-xl p-4">
+        <p className="text-[13px] text-[#134E4A] leading-relaxed">{summarize(scaleA, scaleB, left, right)}</p>
       </div>
     </div>
   );
@@ -986,17 +1112,31 @@ function PickerButton({ value, onChange, exclude, label }) {
   const options = [...ALL_MODES.map((m) => ({ slug: m.slug, name: m.name })), ...Object.entries(EXTRA).map(([slug, v]) => ({ slug, name: v.name }))];
   return (
     <div className="relative">
-      <button onClick={() => setOpen((o) => !o)} className="w-full bg-[#151209] border border-[#211E17] rounded-xl px-3.5 py-3 text-left active:scale-[0.98] transition">
-        <p className="text-[10px] uppercase tracking-wider text-[#6B6459] mb-0.5">{label}</p>
-        <p className="text-[13.5px] font-semibold text-[#F2EDE4] truncate">{scale.name}</p>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="w-full bg-white hover:bg-[#FCFBF9] border border-[#E7E2D8] rounded-xl px-3.5 py-3 text-left active:scale-[0.99] transition shadow-2xs"
+      >
+        <p className="text-[10px] uppercase tracking-wider text-[#78716C] mb-0.5">{label}</p>
+        <p className="text-[13.5px] font-semibold text-[#1C1917] truncate">{scale.name}</p>
       </button>
       {open && (
-        <div className="absolute z-20 top-full mt-1.5 left-0 right-0 bg-[#1A1712] border border-[#211E17] rounded-xl shadow-xl max-h-64 overflow-y-auto">
-          {options.filter((s) => s.slug !== exclude).map((s) => (
-            <button key={s.slug} onClick={() => { onChange(s.slug); setOpen(false); }} className={`w-full text-left px-3.5 py-2.5 text-[13px] hover:bg-[#211E17] transition ${s.slug === value ? "text-[#4FB6A6]" : "text-[#B8AF9F]"}`}>
-              {s.name}
-            </button>
-          ))}
+        <div className="absolute z-20 top-full mt-1.5 left-0 right-0 bg-white border border-[#E7E2D8] rounded-xl shadow-lg max-h-64 overflow-y-auto">
+          {options
+            .filter((s) => s.slug !== exclude)
+            .map((s) => (
+              <button
+                key={s.slug}
+                onClick={() => {
+                  onChange(s.slug);
+                  setOpen(false);
+                }}
+                className={`w-full text-left px-3.5 py-2.5 text-[13px] hover:bg-[#F5F2EB] transition ${
+                  s.slug === value ? "text-[#0F766E] font-semibold" : "text-[#44403C]"
+                }`}
+              >
+                {s.name}
+              </button>
+            ))}
         </div>
       )}
     </div>
@@ -1024,7 +1164,10 @@ function QuizScreen() {
     return shuffled.map((q) => {
       const base = findMode(q.baseSlug);
       const answer = findMode(q.answerSlug);
-      const distractors = [...q.distractSlugs].sort(() => Math.random() - 0.5).slice(0, 3).map((s) => findMode(s).name);
+      const distractors = [...q.distractSlugs]
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 3)
+        .map((s) => findMode(s).name);
       const options = [answer.name, ...distractors].sort(() => Math.random() - 0.5);
       return { base, change: q.change, correct: answer.name, options };
     });
@@ -1037,40 +1180,70 @@ function QuizScreen() {
 
   if (i >= questions.length) {
     return (
-      <div className="px-5 pt-16 text-center">
-        <p className="text-[13px] uppercase tracking-widest text-[#6B6459] mb-3">Quiz Complete</p>
-        <p className="text-[40px] text-[#F2EDE4] mb-2" style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600 }}>{score}/{questions.length}</p>
-        <p className="text-[13px] text-[#8A7F72]">{score === questions.length ? "Perfect — you're thinking in relationships now." : "Revisit the family chains for the ones you missed."}</p>
+      <div className="px-5 md:px-6 pt-16 text-center">
+        <p className="text-[13px] uppercase tracking-widest text-[#78716C] mb-3">Quiz Complete</p>
+        <p className="text-[40px] text-[#1C1917] mb-2" style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600 }}>
+          {score}/{questions.length}
+        </p>
+        <p className="text-[13px] text-[#57534E]">
+          {score === questions.length ? "Perfect — you're thinking in relationships now." : "Revisit the family chains for the ones you missed."}
+        </p>
       </div>
     );
   }
 
   const q = questions[i];
   return (
-    <div className="px-5 pt-8">
-      <p className="text-[11px] uppercase tracking-widest text-[#6B6459] mb-4">Question {i + 1} of {questions.length}</p>
-      <div className="bg-[#151209] border border-[#211E17] rounded-xl p-4 mb-5">
-        <p className="text-[12px] font-mono text-[#8A7F72] mb-1">{q.base.name}</p>
+    <div className="px-5 md:px-6 pt-8 pb-8">
+      <p className="text-[11px] uppercase tracking-widest text-[#78716C] mb-4">
+        Question {i + 1} of {questions.length}
+      </p>
+      <div className="bg-white border border-[#E7E2D8] rounded-xl p-4 mb-5 shadow-2xs">
+        <p className="text-[12px] font-mono text-[#78716C] mb-1">{q.base.name}</p>
         <IntervalRuler formula={q.base.formula} size="sm" dim activeSemitones={active.semis} activeColor={active.color} />
-        <p className="text-center font-mono text-[11px] text-[#6B6459] mt-1">{q.base.formula.join(" ")}</p>
+        <p className="text-center font-mono text-[11px] text-[#78716C] mt-1">{q.base.formula.join(" ")}</p>
         <div className="flex justify-center mt-2.5">
           <MiniPlayButton label="Play it" onPlay={() => playScaleFor(q.base.formula, (h, c) => setActive({ semis: h, color: c }), null, "this")} />
         </div>
       </div>
-      <h2 className="text-[18px] text-[#F2EDE4] mb-6 leading-snug" style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600 }}>If we {q.change}, what do we get?</h2>
+      <h2 className="text-[18px] text-[#1C1917] mb-6 leading-snug" style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600 }}>
+        If we {q.change}, what do we get?
+      </h2>
       <div className="space-y-3">
         {q.options.map((opt) => {
           const isCorrect = opt === q.correct;
           const show = picked !== null;
           return (
-            <button key={opt} disabled={picked !== null} onClick={() => { setPicked(opt); if (isCorrect) setScore((s) => s + 1); }} className={`w-full text-left border rounded-xl px-4 py-3.5 text-[14px] transition ${show ? (isCorrect ? "border-[#1F4A43] bg-[#122421] text-[#DCEFEA]" : opt === picked ? "border-[#5A3A63] bg-[#241726] text-[#E8C9EC]" : "border-[#211E17] text-[#6B6459]") : "border-[#211E17] bg-[#151209] text-[#F2EDE4] active:scale-[0.98]"}`}>
+            <button
+              key={opt}
+              disabled={picked !== null}
+              onClick={() => {
+                setPicked(opt);
+                if (isCorrect) setScore((s) => s + 1);
+              }}
+              className={`w-full text-left border rounded-xl px-4 py-3.5 text-[14px] transition ${
+                show
+                  ? isCorrect
+                    ? "border-[#88CFC3] bg-[#E6F4F1] text-[#134E4A] font-medium"
+                    : opt === picked
+                    ? "border-[#E3B4B8] bg-[#FDF0F1] text-[#8E2A32]"
+                    : "border-[#ECE7DD] bg-[#F7F5F0] text-[#A8A29E]"
+                  : "border-[#E7E2D8] bg-white text-[#1C1917] hover:bg-[#FCFBF9] active:scale-[0.99] shadow-2xs"
+              }`}
+            >
               {opt}
             </button>
           );
         })}
       </div>
       {picked !== null && (
-        <button onClick={() => { setI((n) => n + 1); setPicked(null); }} className="mt-6 w-full bg-[#4FB6A6] text-[#0E1E1B] font-semibold rounded-xl py-3.5 text-[14px] active:scale-[0.98] transition">
+        <button
+          onClick={() => {
+            setI((n) => n + 1);
+            setPicked(null);
+          }}
+          className="mt-6 w-full bg-[#0F766E] hover:bg-[#115E59] text-white font-semibold rounded-xl py-3.5 text-[14px] active:scale-[0.99] transition"
+        >
           {i + 1 < questions.length ? "Next question" : "See results"}
         </button>
       )}
@@ -1079,7 +1252,7 @@ function QuizScreen() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  APP SHELL                                                          */
+/*  APP SHELL — Browser-friendly Light Mode                           */
 /* ------------------------------------------------------------------ */
 
 const NAV = [
@@ -1120,20 +1293,51 @@ export default function IntervalsApp() {
 
   let header, content;
   if (compareState) {
-    header = <ScreenHeader title="Compare Scales" onBack={() => { stopAllAudio(); setCompareState(null); }} />;
+    header = (
+      <ScreenHeader
+        title="Compare Scales"
+        onBack={() => {
+          stopAllAudio();
+          setCompareState(null);
+        }}
+      />
+    );
     content = <CompareScreen initialLeft={compareState.left} initialRight={compareState.right} />;
   } else if (modeSlug) {
     const m = findMode(modeSlug);
-    header = <ScreenHeader title={m.name} eyebrow={familyOf(modeSlug).name} onBack={() => { stopAllAudio(); setModeSlug(null); }} />;
+    header = (
+      <ScreenHeader
+        title={m.name}
+        eyebrow={familyOf(modeSlug).name}
+        onBack={() => {
+          stopAllAudio();
+          setModeSlug(null);
+        }}
+      />
+    );
     content = <ModeDetailScreen slug={modeSlug} onOpenMode={openMode} onCompare={openCompare} />;
   } else if (familyKey) {
-    header = <ScreenHeader title={FAMILIES[familyKey].name} onBack={() => { stopAllAudio(); setFamilyKey(null); }} />;
+    header = (
+      <ScreenHeader
+        title={FAMILIES[familyKey].name}
+        onBack={() => {
+          stopAllAudio();
+          setFamilyKey(null);
+        }}
+      />
+    );
     content = <FamilyDetailScreen familyKey={familyKey} onOpenMode={openMode} />;
   } else {
     header = tab !== "home" ? <ScreenHeader title={titles[tab]} /> : null;
     content =
       tab === "home" ? (
-        <HomeScreen onOpenMode={openMode} onGoFamilies={() => goTab("families")} onGoCompare={() => openCompare("aeolian", "dorian")} onGoChord={() => goTab("chord")} onGoQuiz={() => goTab("quiz")} />
+        <HomeScreen
+          onOpenMode={openMode}
+          onGoFamilies={() => goTab("families")}
+          onGoCompare={() => openCompare("aeolian", "dorian")}
+          onGoChord={() => goTab("chord")}
+          onGoQuiz={() => goTab("quiz")}
+        />
       ) : tab === "families" ? (
         <FamiliesScreen onOpenFamily={openFamily} />
       ) : tab === "chord" ? (
@@ -1144,17 +1348,21 @@ export default function IntervalsApp() {
   }
 
   return (
-    <div className="w-full h-full min-h-[100dvh] bg-[#0E0D0C] flex justify-center">
-      <div className="w-full max-w-[420px] bg-[#0E0D0C] min-h-[100dvh] flex flex-col relative">
+    <div className="w-full min-h-[100dvh] bg-[#F3EFE6] text-[#1C1917] flex justify-center">
+      <div className="w-full max-w-[680px] bg-[#FAF8F5] min-h-[100dvh] flex flex-col relative border-x border-[#E7E2D8] shadow-sm">
         {header}
         <div className="flex-1 overflow-y-auto">{content}</div>
-        <div className="sticky bottom-0 bg-[#0E0D0C]/95 backdrop-blur border-t border-[#211E17] flex px-2 py-2">
+        <div className="sticky bottom-0 bg-[#FAF8F5]/95 backdrop-blur border-t border-[#E7E2D8] flex px-2 md:px-4 py-2">
           {NAV.map(({ key, label, icon: Icon }) => {
             const active = tab === key && !modeSlug && !familyKey && !compareState;
             return (
-              <button key={key} onClick={() => goTab(key)} className="flex-1 flex flex-col items-center gap-1 py-1.5 rounded-lg">
-                <Icon size={19} strokeWidth={2} color={active ? "#4FB6A6" : "#6B6459"} />
-                <span className={`text-[10px] font-medium ${active ? "text-[#4FB6A6]" : "text-[#6B6459]"}`}>{label}</span>
+              <button
+                key={key}
+                onClick={() => goTab(key)}
+                className="flex-1 flex flex-col items-center gap-1 py-1.5 rounded-lg hover:bg-[#F2EFE8] transition"
+              >
+                <Icon size={19} strokeWidth={2} color={active ? "#0F766E" : "#78716C"} />
+                <span className={`text-[10px] font-medium ${active ? "text-[#0F766E]" : "text-[#78716C]"}`}>{label}</span>
               </button>
             );
           })}
